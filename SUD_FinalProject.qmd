@@ -1,0 +1,323 @@
+---
+title: "Addressing the Need for and Fiscal Limitations of Chicago’s Overnight Train Service"
+author: Jake Cox
+email: jcox41@depaul.edu
+date: 11/13/2025
+
+bibliography: references.bib
+
+format: 
+  html:
+    warning: false
+    error: false
+    code-tools: false
+    code-fold: false
+    echo: true
+    toc: true
+    theme: flatly
+    reference-location: document
+    fontsize: 0.9em
+    interlinespace: -0.75em
+    embed-resources: true
+    number-sections: false
+    number-depth: 1
+
+execute:
+  warning: false
+  error: false
+  echo: true
+  eval: true
+---
+
+# Introduction
+Chicago is one of only two U.S. cities with a 24/7 subway system, a feature that has long shaped its public transit identity and elevated the city’s economy by enabling it to operate around the clock. Chicago is the United States’s “second city,” and its inclusion of a transit system that functions in this way is just another way in which the city can reinforce that moniker. Though skepticism has spread through the Chicago Transit Authority regarding the overnight service’s fiscal elasticity. Budget problems aren’t new to the CTA since the COVID-19 pandemic; the agency has struggled to bounce back at a similar pace as peer agencies. (Chicago Transit Authority 2025)
+
+Throughout most of the year, it seemed the CTA’s fate was all but sealed as an agency that would, without cash be forced to make deep cuts to every facet of the organization. However, the transit authority’s operational budget is safe for now — as state lawmakers pushed through an infusion of cash for the agency in the 11th hour, on October 31, 2025 — it is far from fate. (Ramos 2025) (Spielman 2025)Now, flush with more cash than expected—totaling $1.5 billion—it will extend overnight service to the Orange Line — now connecting Midway Airport to the Loop at any time, day or night. (Spielman 2025) It is time the CTA examines the cost and benefit of overnight service and what it can do to optimize service to prevent future budgetary crises. Using ridership data, cost considerations, and comparisons to analogous transit systems, this analysis will propose actionable recommendations for a more sustainable, targeted overnight service model. 
+
+Research on late-shift mobility shows that overnight transit service functions as essential economic and social infrastructure rather than an amenity. A 2020 American Public Transportation Association (APTA) study finds that late-shift workers, concentrated in healthcare, hospitality, airport operations, warehousing, building services, and manufacturing, face disproportionate transportation burdens when transit does not operate during overnight hours. The report argues that inadequate night service forces many workers toward car ownership they often cannot afford, contributes to higher rates of absenteeism and turnover, and ultimately imposes economic losses on employers and regional economies. Because these workers are disproportionately low-income and people of color, APTA frames overnight public transit as central to both economic competitiveness and mobility equity. (Zalewski, et al. 20205)
+
+Chicago’s own ridership and financial trajectory after the COVID-19 pandemic illustrates the tension the agency feels as it weighs this hefty expenditure against the value it provides. CTA ridership grew in 2024, but it remained far below 2019 levels, and rail recovery has lagged even as operating costs have continued to rise. (Ramos 2025) While the Illinois General Assembly passed new transit funding in 2025, the long-term fiscal picture is still unclear because ridership has not returned to its pre-pandemic baseline. In 2019, the CTA averaged 38 million monthly rail boardings; in 2024, that figure was 25.8 million, leaving a gap of nearly 12 million monthly riders—a shortfall that translates to roughly $30 million in lost fare revenue each month. The system is recovering, but slowly. Average monthly rail ridership in 2025 stands at 26.4 million, which is 6 million rides higher than 2022, showing meaningful improvement while still falling far short of the demand levels the system once relied on. (Chicago Transit Authority 2025)
+
+This literature and policy context show that Chicago’s overnight rail service sits at the intersection of three forms of sustainability: economic (supporting the city’s night-shift labor market), social (serving transit-dependent workers and communities), and fiscal (operating within a tighter budget than in decades past). These pressures reflect the need to evaluate and optimize overnight Red, Blue, and newly 24-hour Orange Line service so the CTA can maintain essential mobility while avoiding future budget crises.
+
+# Background
+Research on late-shift mobility shows that overnight transit service functions as essential economic and social infrastructure rather than an amenity. A 2020 American Public Transportation Association (APTA) study finds that late-shift workers, concentrated in healthcare, hospitality, airport operations, warehousing, building services, and manufacturing, face disproportionate transportation burdens when transit does not operate during overnight hours. The report argues that inadequate night service forces many workers toward car ownership they often cannot afford, contributes to higher rates of absenteeism and turnover, and ultimately imposes economic losses on employers and regional economies. Because these workers are disproportionately low-income and people of color, APTA frames overnight public transit as central to both economic competitiveness and mobility equity. (Zalewski, et al. 20205)
+
+Chicago’s own ridership and financial trajectory after the COVID-19 pandemic illustrates the tension the agency feels as it weighs this hefty expenditure against the value it provides. CTA ridership grew in 2024, but it remained far below 2019 levels, and rail recovery has lagged even as operating costs have continued to rise. (Ramos 2025) While the Illinois General Assembly passed new transit funding in 2025, the long-term fiscal picture is still unclear because ridership has not returned to its pre-pandemic baseline. In 2019, the CTA averaged 38 million monthly rail boardings; in 2024, that figure was 25.8 million, leaving a gap of nearly 12 million monthly riders—a shortfall that translates to roughly $30 million in lost fare revenue each month. The system is recovering, but slowly. Average monthly rail ridership in 2025 stands at 26.4 million, which is 6 million rides higher than 2022, showing meaningful improvement while still falling far short of the demand levels the system once relied on. (Chicago Transit Authority 2025)
+
+```{r}
+#| fig-cap: "Figure 1: CTA monthly ridership has grown since the pandemic but remains far below the 2019 baseline, even as operating costs rise.<br>wJake Cox / DePaul University; @chi_boarding"
+#| echo: false
+#| message: false
+#| warning: false
+#| eval: true
+#| out-width: 100%
+
+library(tidyverse)
+library(lubridate)
+library(scales)
+
+# Load CTA dataset
+base <- "https://data.cityofchicago.org/resource/6iiy-9s97.csv"
+query <- "?$limit=200000"
+url <- URLencode(paste0(base, query))
+
+df <- readr::read_csv(url, show_col_types = FALSE) %>%
+  mutate(
+    service_date = as.Date(service_date),
+    year  = year(service_date),
+    month = month(service_date),
+    month_label = factor(month.abb[month], levels = month.abb),
+    total_rides = as.numeric(total_rides)
+  ) %>%
+  filter(
+    year >= 2019, year <= 2025,
+    !(year == 2020 & month <= 4)
+  )
+
+# Monthly totals
+monthly <- df %>%
+  group_by(year, month, month_label) %>%
+  summarize(
+    monthly_riders = sum(total_rides, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+plot_data <- monthly %>%
+  filter(year %in% 2019:2025) %>%
+  mutate(year = factor(year))
+
+# Right-edge labels
+end_labels <- plot_data %>%
+  group_by(year) %>%
+  filter(month == max(month)) %>%
+  ungroup()
+
+# NYT-ish palette
+year_colors <- c(
+ "2019" = "#222222",  # dark baseline
+  "2020" = "#d0d0d0",
+  "2021" = "#c0c0c0",
+  "2022" = "#aaaaaa",
+  "2023" = "#8f8f8f",
+  "2024" = "#7F7F7F",  # strong blue
+  "2025" = "#0072B2"   # accent orange
+)
+
+# Plot
+ggplot(plot_data, aes(
+  x = month_label,
+  y = monthly_riders,
+  group = year,
+  color = year
+)) +
+  geom_line(data = subset(plot_data, year != "2019"), linewidth = 0.7) +
+  geom_line(data = subset(plot_data, year == "2019"), linewidth = 1.2) +
+  geom_text(
+    data = end_labels,
+    aes(
+      label = ifelse(
+        year == "2019",
+        "2019 (pre-pandemic baseline)",
+        as.character(year)
+      )
+    ),
+    hjust = 0,
+    vjust = 0.5,
+    size = 3,
+    show.legend = FALSE
+  ) +
+  scale_color_manual(values = year_colors) +
+  scale_y_continuous(
+    labels = label_number(accuracy = 0.1, scale = 1e-6, suffix = "M"),
+    expand = expansion(mult = c(0, 0.1))
+  ) +
+  scale_x_discrete(expand = expansion(mult = c(0.02, 0.12))) +
+  coord_cartesian(clip = "off") +
+  labs(
+    title = "CTA ridership still hasn’t returned to its pre-pandemic peak",
+    subtitle = "Total monthly rail boardings, 2019–2025",  
+    x = "Month",
+    y = "Total monthly riders"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey85"),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(color = "grey30"),
+    plot.margin = margin(t = 10, r = 100, b = 10, l = 5)
+  )
+```
+
+This literature and policy context show that Chicago’s overnight rail service sits at the intersection of three forms of sustainability: economic (supporting the city’s night-shift labor market), social (serving transit-dependent workers and communities), and fiscal (operating within a tighter budget than in decades past). These pressures reflect the need to evaluate and optimize overnight Red, Blue, and newly 24-hour Orange Line service so the CTA can maintain essential mobility while avoiding future budget crises.
+
+
+# Methods
+This analysis draws on three principal data sources—ridership data, budget projections, and customer satisfaction surveys—to evaluate the sustainability of Chicago’s overnight rail service and to determine whether the current 24-hour operating structure aligns with contemporary demand and fiscal conditions.
+
+First, quantitative ridership data from 2019 through 2025 were analyzed by CTA station boarding totals—calculated by the number of Ventra “taps” recorded at each given station. This dataset allows for a comparison between pre-pandemic baselines and current overnight activity on the Red, Blue, and now 24-hour Orange Lines. While granular boarding data is not available, it is clear from available ridership data that the Blue Line and Red Line have the highest ridership, compared to other CTA lines. In 2024, the Red Line saw 39.2 million boards and the Blue Line saw 26.1 million. The following, Brown Lithe ne, is less than half of that of the Blue line. The study also evaluates the CTA’s revenue from fare collection compared to what it may have been if ridership had not tanked due to the COVID-19 pandemic. Revenue analysis can show how large a fare deficit the transit authority is running under and propose the role overnight service plays in it. (Chicago Transit Authority 2024)
+
+Lastly, the study draws on customer satisfaction surveys conducted by the CTA and regional transit agencies. These surveys provide qualitative insight into rider perceptions of safety, reliability, frequency, and overall usefulness of overnight service. Survey data are used to contextualize ridership trends and to assess whether operational adjustments—such as reduced headways, partial-line service, or bus-rail substitution—would align with rider priorities and expectations. These findings help identify which service attributes are most important to overnight riders, and which areas require improvement to sustain use. Together, these three sources—quantitative ridership patterns, revenue-linked budget projections, and rider experience data—form an integrated framework for evaluating the strengths and limitations of the current 24-hour rail model and identifying potential alternatives.
+
+```{r}
+#| label: fig-cta-line-ridership
+#| fig-cap: "2024 CTA Rail Ridership by Line, excluding Loop station boardings."
+#| warning: false
+#| message: false
+#| echo: false
+
+library(tidyverse)
+library(scales)
+
+cta_lines <- tribble(
+  ~line, ~annual_rides, ~color,
+  "Red Line",     39173070, "#C60C30",
+  "Blue Line",    26050717, "#00A1DE",
+  "Brown Line",   11198933, "#62361B",
+  "Green Line",    7990447, "#009B3A",
+  "Orange Line",   5386907, "#F9461C",
+  "Pink Line",     3732162, "#E27EA6",
+  "Purple Line",   1613108, "#522398",
+  "Yellow Line",    396786, "#F9E300"
+)
+
+ggplot(cta_lines,
+       aes(x = reorder(line, annual_rides),
+           y = annual_rides,
+           fill = line)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(annual_rides / 1e6, 1), "M")),
+            hjust = -0.1,
+            size = 4.2) +
+  scale_fill_manual(values = setNames(cta_lines$color, cta_lines$line)) +
+  scale_y_continuous(labels = comma,
+                     expand = expansion(mult = c(0, 0.1))) +
+  coord_flip() +
+  labs(
+    title = "2024 CTA Ridership By Line",
+    subtitle = "Summed totals, excluding Loop station boardings",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+Third, this report compares Chicago’s service model to peer transit systems that have restructured or selectively limited overnight operations. By examining models used in New York, Boston, Philadelphia, Toronto and London, the analysis identifies alternative late-night structures—such as partial-line service, targeted headways or bus-rail hybrids—that preserve mobility while reducing cost pressures.
+Finally, several optimization scenarios are modeled against Chicago’s ridership and cost conditions. Each option is evaluated for equity implications, operational feasibility and potential savings. Together, these methods aim to contribute value to Chicago’s transportation community by outlining realistic, data-driven strategies for maintaining essential overnight mobility while safeguarding the CTA’s long-term fiscal stability.
+
+# Discussion/Conclusion
+The results of this analysis highlight a fundamental tension in the CTA’s overnight rail operations. While Chicago continues to rely on late-night transit to support hospital workers, airport employees, service-sector labor, and transit-dependent communities, ridership levels remain well below 2019 benchmarks. More importantly, overnight demand is unevenly distributed across the system. To better meet demand while reducing costs, the CTA should study boarding habits during owl service on the CTA and find the feasibility of running fewer runs during overnight hours with express service. This combination would reduce costs while retaining similar headways. Particularly for the Blue and now Orange Lines running some runs of these trains as direct service from the Loop to O’Hare or Midway would allow for fewer runs to accommodate most riders—and maximize the increased fare collected at airport turnstiles, five dollars for a single ride compared to 2.50 at other stops. 
+
+```{r}
+#| label: fig-revenue-gap-clean
+#| fig-cap: "CTA monthly fare revenue compared with its 2019 baseline. Pale grey shows the 2019 benchmark; dark grey shows actual revenue; red shading represents lost revenue relative to 2019. (Jake Cox / DePaul University; @chi_boarding)"
+#| echo: false
+#| warning: false
+#| message: false
+#| out-width: 100%
+
+library(tidyverse)
+library(scales)
+library(stringr)
+
+# CTA-reported average fares
+fare_table <- tibble(
+  year     = 2019:2024,
+  avg_fare = c(1.29, 1.13, 1.07, 1.13, 1.16, 1.19)
+)
+
+# Compute average monthly revenue from your `monthly`
+yearly_rev <- monthly %>%
+  filter(year %in% 2019:2024) %>%
+  group_by(year) %>%
+  summarize(
+    avg_monthly_riders = mean(monthly_riders),
+    .groups = "drop"
+  ) %>%
+  left_join(fare_table, by = "year") %>%
+  mutate(
+    actual_rev = avg_monthly_riders * avg_fare
+  )
+
+baseline_2019 <- yearly_rev %>% filter(year == 2019) %>% pull(actual_rev)
+
+# Plot
+ggplot(yearly_rev, aes(x = factor(year))) +
+  
+  # 2019 baseline bar (pale grey)
+  geom_col(
+    aes(y = baseline_2019),
+    fill = "#d9d9d9",
+    width = 0.65
+  ) +
+  
+  # actual revenue (dark grey)
+  geom_col(
+    aes(y = actual_rev),
+    fill = "#4d4d4d",
+    width = 0.65
+  ) +
+  
+  # red shortfall ribbon
+  geom_rect(
+    aes(
+      xmin = as.numeric(factor(year)) - 0.325,
+      xmax = as.numeric(factor(year)) + 0.325,
+      ymin = actual_rev,
+      ymax = baseline_2019
+    ),
+    fill = "#C62828",
+    alpha = 0.45
+  ) +
+  
+  # labels for actual revenue
+  geom_text(
+    aes(
+      y = actual_rev,
+      label = dollar(actual_rev / 1e6, suffix = "M", accuracy = 0.1)
+    ),
+    vjust = -0.4, size = 3
+  ) +
+  
+  scale_y_continuous(
+    labels = ~ dollar(.x / 1e6, suffix = "M"),
+    expand = expansion(mult = c(0, 0.12))
+  ) +
+  
+  labs(
+    title = "CTA monthly fare revenue remains far below its 2019 baseline",
+    subtitle = str_wrap(
+      "Pale grey bars show the 2019 benchmark revenue; dark grey bars show actual monthly fare revenue by year; red shading represents the revenue CTA would need to recover to reach the 2019 baseline.",
+      width = 75
+    ),
+    x = "Year",
+    y = "Fare revenue per month (nominal USD)"
+  ) +
+  
+  theme_minimal(base_size = 11) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey85"),
+    plot.title = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(color = "grey30", lineheight = 1.2),
+    axis.title.x = element_text(margin = margin(t = 8)),
+    axis.title.y = element_text(margin = margin(r = 8)),
+    plot.margin = margin(t = 10, r = 50, b = 10, l = 10)
+  )
+```
+
+At the same time, any overnight service changes must balance efficiency with the equity considerations that have long shaped Chicago’s transit network. Many of the stations with modest ridership still serve neighborhoods where transit is the only reliable overnight mobility option, and service reductions could disproportionately affect riders with the fewest alternatives. A data-driven restructuring of Owl service would therefore require more granular analysis—including station-level boarding patterns, connecting bus frequency, and the geographic distribution of overnight workers—to ensure that cost savings do not undermine access.         
+
+Ultimately, sustaining 24-hour transit in Chicago will require a closer alignment between service levels and the ridership patterns revealed in the data. A differentiated overnight operating model, supported by stable long-term funding, offers a path for the CTA to maintain essential mobility for night-shift workers while strengthening the system’s financial stability in the years ahead.
+
