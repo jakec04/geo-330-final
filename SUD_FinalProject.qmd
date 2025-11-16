@@ -161,8 +161,6 @@ This analysis draws on three principal data sources—ridership data, budget pro
 
 First, quantitative ridership data from 2019 through 2025 were analyzed by CTA station boarding totals—calculated by the number of Ventra “taps” recorded at each given station. This dataset allows for a comparison between pre-pandemic baselines and current overnight activity on the Red, Blue, and now 24-hour Orange Lines. While granular boarding data is not available, it is clear from available ridership data that the Blue Line and Red Line have the highest ridership, compared to other CTA lines. In 2024, the Red Line saw 39.2 million boards and the Blue Line saw 26.1 million. The following, Brown Lithe ne, is less than half of that of the Blue line. The study also evaluates the CTA’s revenue from fare collection compared to what it may have been if ridership had not tanked due to the COVID-19 pandemic. Revenue analysis can show how large a fare deficit the transit authority is running under and propose the role overnight service plays in it. @CTA_2024
 
-Lastly, the study draws on customer satisfaction surveys conducted by the CTA and regional transit agencies. These surveys provide qualitative insight into rider perceptions of safety, reliability, frequency, and overall usefulness of overnight service. Survey data are used to contextualize ridership trends and to assess whether operational adjustments—such as reduced headways, partial-line service, or bus-rail substitution—would align with rider priorities and expectations. These findings help identify which service attributes are most important to overnight riders, and which areas require improvement to sustain use. Together, these three sources—quantitative ridership patterns, revenue-linked budget projections, and rider experience data—form an integrated framework for evaluating the strengths and limitations of the current 24-hour rail model and identifying potential alternatives.
-
 ```{r}
 #| label: fig-cta-line-ridership
 #| fig-cap: "2024 CTA Rail Ridership by Line, excluding Loop station boardings. (Jake Cox / DePaul University; @CTA_2024)"
@@ -213,6 +211,7 @@ ggplot(cta_lines,
 
 
 Third, this report compares Chicago’s service model to peer transit systems that have restructured or selectively limited overnight operations. By examining models used in New York, Boston, Philadelphia, Toronto and London, the analysis identifies alternative late-night structures—such as partial-line service, targeted headways or bus-rail hybrids—that preserve mobility while reducing cost pressures.
+
 Finally, several optimization scenarios are modeled against Chicago’s ridership and cost conditions. Each option is evaluated for equity implications, operational feasibility and potential savings. Together, these methods aim to contribute value to Chicago’s transportation community by outlining realistic, data-driven strategies for maintaining essential overnight mobility while safeguarding the CTA’s long-term fiscal stability.
 
 # Discussion/Conclusion
